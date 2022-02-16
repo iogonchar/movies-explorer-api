@@ -38,6 +38,10 @@ const updateUser = (req, res, next) => {
     .catch((err) => {
       if (err.name === 'ValidationError') {
         next(new BadRequestError(`Переданные данные не прошли валидацию. ${err.message}`));
+      } else if (err.name === 'CastError') {
+        next(new BadRequestError(`Введён невалидный id пользователя. ${err.message}`));
+      } else if (err.codeName === 'DuplicateKey') {
+        next(new ConflictingRequestError(`Пользователь с таким e-mail уже существует. ${err.message}`));
       } else {
         next(err);
       }

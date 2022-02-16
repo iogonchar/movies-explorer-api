@@ -6,15 +6,10 @@ const mongoose = require('mongoose');
 const helmet = require('helmet');
 const bodyParser = require('body-parser');
 
-const { errors, celebrate, Joi } = require('celebrate');
+const { errors } = require('celebrate');
 const { requestLogger, errorLogger } = require('./middlewares/logger');
 
-const { createUser, login } = require('./controllers/users');
-const auth = require('./middlewares/auth');
-const usersRoutes = require('./routes/users');
-const moviesRoutes = require('./routes/movies');
-
-const NotFoundError = require('./errors/NotFoundError');
+const routes = require('./routes/index');
 
 // Порт
 const { PORT = 3000 } = process.env;
@@ -49,26 +44,7 @@ app.use(bodyParser.urlencoded({ extended: true }));
 
 app.use(requestLogger);
 
-app.post('/signin', celebrate({
-  body: Joi.object().keys({
-    email: Joi.string().required().email(),
-    password: Joi.string().required(),
-  }),
-}), login);
-
-app.post('/signup', celebrate({
-  body: Joi.object().keys({
-    name: Joi.string().min(2).max(30),
-    email: Joi.string().required().email(),
-    password: Joi.string().required(),
-  }),
-}), createUser);
-
-app.use('/', auth, usersRoutes);
-app.use('/', auth, moviesRoutes);
-app.use('*', () => {
-  throw new NotFoundError('Запрашиваемый ресурс не найден');
-});
+app.use('/', routes);
 
 app.use(errorLogger);
 app.use(errors());

@@ -50,18 +50,21 @@ const getMovies = (req, res, next) => {
 };
 
 const deleteMovie = (req, res, next) => {
-  Movie.findById(req.params.movieId).select('+owner')
+  Movie.findById(req.params.movieId)
+    .orFail(new NotFoundError('Фильм с указанным id не найден'))
     .then((movie) => {
-      if (!movie) {
-        throw new NotFoundError('Фильм с таким id не найден');
-      } else if (movie.owner.toString() !== req.user._id) {
-        throw new ForbiddenError('Недостаточно прав для удаления фильма');
+      if (req.user._id.toString() === movie.owner.toString()) {
+        return movie.remove()
+          .then(() => res.status(200).send({ message: 'Фильм удалён' }));
       }
-
-      Movie.findByIdAndDelete(req.params.movieId).select('-owner')
-        .then((deletedMovie) => res.status(200).send(deletedMovie));
+      throw new ForbiddenError('Недостаточно прав для удаления фильма');
     })
-    .catch(next);
+    .catch((err) => {
+      if (err.name === 'CastError') {
+        throw new BadRequestError('Невалидный id фильма');
+      }
+      next(err);
+    });
 };
 
 module.exports = { createMovie, getMovies, deleteMovie };
