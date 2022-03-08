@@ -16,24 +16,22 @@ const { PORT = 3000 } = process.env;
 
 const app = express();
 
-const allowedCors = [
-  'http://movies-hancorg.nomoredomains.xyz/',
-  'http://movies-hancorg.nomoredomains.xyz/',
-  'localhost:3000',
-];
-
-app.use(cors({
+const corsOptions = {
+  origin: [
+    'http://movies-hancorg.nomoredomains.xyz',
+    'https://movies-hancorg.nomoredomains.xyz',
+    'localhost:3000',
+    'http://localhost:3000',
+    'https://localhost:3000',
+  ],
+  methods: ['GET', 'HEAD', 'PUT', 'PATCH', 'POST', 'DELETE'],
+  preflightContinue: false,
+  optionsSuccessStatus: 204,
+  allowedHeaders: ['Content-Type', 'origin', 'Authorization', 'Accept'],
   credentials: true,
-  origin(origin, callback) {
-    if (allowedCors.includes(origin) || !origin) {
-      callback(null, true);
-    } else {
-      callback(new Error('Not allowed by CORS'));
-    }
-  },
-}));
+};
 
-app.options('*', cors());
+app.options('*', cors(corsOptions));
 
 mongoose.connect('mongodb://127.0.0.1:27017/moviesdb');
 
